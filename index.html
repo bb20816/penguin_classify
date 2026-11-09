@@ -1,0 +1,167 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>펭귄 성별 로지스틱 회귀 시뮬레이터</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eaf1f5;--sf:#fff;--ink:#12263a;--mu:#56677a;--ln:#cbd8e2;--fe:#16807f;--ma:#cf7a1f;--ac:#1d4e89;--bad:#c0392b;--tint:#f3f7fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1824;--sf:#13243456;--sf:#132434;--ink:#e6eef5;--mu:#93a6b8;--ln:#27405a;--fe:#3cc0bd;--ma:#f0a04b;--ac:#7fb0ee;--bad:#ff8d7e;--tint:#0f1f2d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c1824;--sf:#132434;--ink:#e6eef5;--mu:#93a6b8;--ln:#27405a;--fe:#3cc0bd;--ma:#f0a04b;--ac:#7fb0ee;--bad:#ff8d7e;--tint:#0f1f2d;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left,0px)) 32px max(16px,env(safe-area-inset-right,0px))}
+h1{margin:0;font-size:clamp(22px,4.4vw,30px);font-weight:800;letter-spacing:-.01em}
+.lede{margin:6px 0 16px;color:var(--mu);max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:14px 16px}
+h2{margin:0 0 8px;font-size:16px;font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.seg button{appearance:none;border:0;background:var(--tint);color:var(--ink);font:inherit;padding:6px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--ln)}
+.seg button[aria-pressed="true"]{background:var(--ac);color:#fff}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.lg{display:inline-flex;align-items:center;gap:6px;color:var(--mu);font-size:13px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+canvas{width:100%;height:370px;display:block;touch-action:pan-y;cursor:crosshair}
+.hint{color:var(--mu);font-size:13px;margin:6px 0 0}
+label{display:flex;justify-content:space-between;font-weight:600;font-size:14px}
+input[type=range]{width:100%;margin:4px 0 12px;accent-color:var(--ac)}
+input[type=number]{width:120px;font:inherit;padding:5px 8px;border:1px solid var(--ln);border-radius:6px;background:var(--tint);color:var(--ink)}
+.btn{appearance:none;border:1px solid var(--ac);background:var(--ac);color:#fff;font:inherit;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer}
+.btn.o{background:transparent;color:var(--ac)}
+.calc{background:var(--tint);border-radius:8px;padding:9px 11px;font-size:13.5px;overflow-wrap:anywhere}
+.calc+.calc{margin-top:6px}
+.big{font-size:20px;font-weight:800}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--ln);padding:6px 8px;text-align:center}
+th{background:var(--tint);font-weight:600}
+td.ok{background:color-mix(in srgb,var(--fe) 18%,transparent);font-weight:700}
+.note{font-size:12.5px;color:var(--mu);margin-top:16px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><div class="wrap">
+<h1>펭귄 성별 로지스틱 회귀 시뮬레이터</h1>
+<p class="lede">펭귄의 몸 크기 하나(독립변수 x)로 암컷인지 수컷인지(0 또는 1)를 맞히는 모델이에요. 선을 직접 움직여 보고, 자동 학습이 찾은 값과 비교해 보세요.</p>
+<div class="grid">
+<div class="col">
+ <div class="card">
+  <div class="row"><div class="seg" id="sp" role="group" aria-label="펭귄 종"></div><div class="seg" id="vr" role="group" aria-label="독립변수"></div></div>
+  <div class="row"><span class="lg"><i class="sw" style="background:var(--fe)"></i>암컷 (y=0)</span><span class="lg"><i class="sw" style="background:var(--ma)"></i>수컷 (y=1)</span><span class="lg" id="cnt"></span></div>
+  <canvas id="cv" role="img" aria-label="독립변수와 수컷일 확률을 보여주는 산점도와 시그모이드 곡선"></canvas>
+  <p class="hint">그래프를 누르거나 끌면 예측할 값 x가 바뀌어요. 점은 겹치지 않게 세로로 조금 흩어 그렸고 실제 값은 0 또는 1이에요. 빨간 테두리는 현재 모델이 틀린 점이에요.</p>
+ </div>
+ <div class="card"><h2>분류 모델 성능 평가</h2><div id="cm"></div><p class="hint" id="acc"></p></div>
+</div>
+<div class="col">
+ <div class="card"><h2>모델 매개변수</h2>
+  <label for="sw-i">기울기 w <output id="sw-o"></output></label><input type="range" id="sw-i" min="0" max="1000">
+  <label for="sx-i">경계값 x₀ (확률 0.5인 지점) <output id="sx-o"></output></label><input type="range" id="sx-i">
+  <div class="calc" id="fm"></div><div class="calc" id="bd"></div>
+  <div class="row" style="margin:12px 0 0"><button class="btn" id="tr">자동으로 학습하기</button><button class="btn o" id="rs">처음으로</button></div>
+  <p class="hint" id="ls"></p>
+ </div>
+ <div class="card"><h2>새 펭귄 예측</h2>
+  <div class="row"><label for="qx" style="display:block">x 값</label><input type="number" id="qx"><span id="qu" class="hint" style="margin:0"></span></div>
+  <div class="calc" id="pc"></div><p style="margin:10px 0 0"><span class="big" id="pv"></span></p>
+ </div>
+</div></div>
+<p class="note">자료: 업로드한 penguins_size 파일 (원본: Gorman, Williams &amp; Fraser, 2014, Palmer Station LTER, CC0). 성별이 비어 있거나 점(.)으로 적힌 11마리와 측정값이 빈 행은 제외했고, 나머지 값은 고치지 않고 그대로 썼어요. 학습과 평가에 같은 데이터를 쓰기 때문에 정확도는 실제 예측 성능보다 높게 나올 수 있어요. 수업용 시뮬레이션이에요.</p>
+</div>
+<script>
+(()=>{
+const D=[[0,1,3750,181,39.1],[0,0,3800,186,39.5],[0,0,3250,195,40.3],[0,0,3450,193,36.7],[0,1,3650,190,39.3],[0,0,3625,181,38.9],[0,1,4675,195,39.2],[0,0,3200,182,41.1],[0,1,3800,191,38.6],[0,1,4400,198,34.6],[0,0,3700,185,36.6],[0,0,3450,195,38.7],[0,1,4500,197,42.5],[0,0,3325,184,34.4],[0,1,4200,194,46.0],[0,0,3400,174,37.8],[0,1,3600,180,37.7],[0,0,3800,189,35.9],[0,1,3950,185,38.2],[0,1,3800,180,38.8],[0,0,3800,187,35.3],[0,1,3550,183,40.6],[0,0,3200,187,40.5],[0,0,3150,172,37.9],[0,1,3950,180,40.5],[0,0,3250,178,39.5],[0,1,3900,178,37.2],[0,0,3300,188,39.5],[0,1,3900,184,40.9],[0,0,3325,195,36.4],[0,1,4150,196,39.2],[0,1,3950,190,38.8],[0,0,3550,180,42.2],[0,0,3300,181,37.6],[0,1,4650,184,39.8],[0,0,3150,182,36.5],[0,1,3900,195,40.8],[0,0,3100,186,36.0],[0,1,4400,196,44.1],[0,0,3000,185,37.0],[0,1,4600,190,39.6],[0,1,3425,182,41.1],[0,0,3450,190,36.0],[0,1,4150,191,42.3],[0,0,3500,186,39.6],[0,1,4300,188,40.1],[0,0,3450,190,35.0],[0,1,4050,200,42.0],[0,0,2900,187,34.5],[0,1,3700,191,41.4],[0,0,3550,186,39.0],[0,1,3800,193,40.6],[0,0,2850,181,36.5],[0,1,3750,194,37.6],[0,0,3150,185,35.7],[0,1,4400,195,41.3],[0,0,3600,185,37.6],[0,1,4050,192,41.1],[0,0,2850,184,36.4],[0,1,3950,192,41.6],[0,0,3350,195,35.5],[0,1,4100,188,41.1],[0,0,3050,190,35.9],[0,1,4450,198,41.8],[0,0,3600,190,33.5],[0,1,3900,190,39.7],[0,0,3550,196,39.6],[0,1,4150,197,45.8],[0,0,3700,190,35.5],[0,1,4250,195,42.8],[0,0,3700,191,40.9],[0,1,3900,184,37.2],[0,0,3550,187,36.2],[0,1,4000,195,42.1],[0,0,3200,189,34.6],[0,1,4700,196,42.9],[0,0,3800,187,36.7],[0,1,4200,193,35.1],[0,0,3350,191,37.3],[0,1,3550,194,41.3],[0,1,3800,190,36.3],[0,0,3500,189,36.9],[0,1,3950,189,38.3],[0,0,3600,190,38.9],[0,0,3550,202,35.7],[0,1,4300,205,41.1],[0,0,3400,185,34.0],[0,1,4450,186,39.6],[0,0,3300,187,36.2],[0,1,4300,208,40.8],[0,0,3700,190,38.1],[0,1,4350,196,40.3],[0,0,2900,178,33.1],[0,1,4100,192,43.2],[0,0,3725,192,35.0],[0,1,4725,203,41.0],[0,0,3075,183,37.7],[0,1,4250,190,37.8],[0,0,2925,193,37.9],[0,1,3550,184,39.7],[0,0,3750,199,38.6],[0,1,3900,190,38.2],[0,0,3175,181,38.1],[0,1,4775,197,43.2],[0,0,3825,198,38.1],[0,1,4600,191,45.6],[0,0,3200,193,39.7],[0,1,4275,197,42.2],[0,0,3900,191,39.6],[0,1,4075,196,42.7],[0,0,2900,188,38.6],[0,1,3775,199,37.3],[0,0,3350,189,35.7],[0,1,3325,189,41.1],[0,0,3150,187,36.2],[0,1,3500,198,37.7],[0,0,3450,176,40.2],[0,1,3875,202,41.4],[0,0,3050,186,35.2],[0,1,4000,199,40.6],[0,0,3275,191,38.8],[0,1,4300,195,41.5],[0,0,3050,191,39.0],[0,1,4000,210,44.1],[0,0,3325,190,38.5],[0,1,3500,197,43.1],[0,0,3500,193,36.8],[0,1,4475,199,37.5],[0,0,3425,187,38.1],[0,1,3900,190,41.1],[0,0,3175,191,35.6],[0,1,3975,200,40.2],[0,0,3400,185,37.0],[0,1,4250,193,39.7],[0,0,3400,193,40.2],[0,1,3475,187,40.6],[0,0,3050,188,32.1],[0,1,3725,190,40.7],[0,0,3000,192,37.3],[0,1,3650,185,39.0],[0,1,4250,190,39.2],[0,0,3475,184,36.6],[0,0,3450,195,36.0],[0,1,3750,193,37.8],[0,0,3700,187,36.0],[0,1,4000,201,41.5],[1,0,3500,192,46.5],[1,1,3900,196,50.0],[1,1,3650,193,51.3],[1,0,3525,188,45.4],[1,1,3725,197,52.7],[1,0,3950,198,45.2],[1,0,3250,178,46.1],[1,1,3750,197,51.3],[1,0,4150,195,46.0],[1,1,3700,198,51.3],[1,0,3800,193,46.6],[1,1,3775,194,51.7],[1,0,3700,185,47.0],[1,1,4050,201,52.0],[1,0,3575,190,45.9],[1,1,4050,201,50.5],[1,1,3300,197,50.3],[1,0,3700,181,58.0],[1,0,3450,190,46.4],[1,1,4400,195,49.2],[1,0,3600,181,42.4],[1,1,3400,191,48.5],[1,0,2900,187,43.2],[1,1,3800,193,50.6],[1,0,3300,195,46.7],[1,1,4150,197,52.0],[1,0,3400,200,50.5],[1,1,3800,200,49.5],[1,0,3700,191,46.4],[1,1,4550,205,52.8],[1,0,3200,187,40.9],[1,1,4300,201,54.2],[1,0,3350,187,42.5],[1,1,4100,203,51.0],[1,1,3600,195,49.7],[1,0,3900,199,47.5],[1,0,3850,195,47.6],[1,1,4800,210,52.0],[1,0,2700,192,46.9],[1,1,4500,205,53.5],[1,1,3950,210,49.0],[1,0,3650,187,46.2],[1,1,3550,196,50.9],[1,0,3500,196,45.5],[1,0,3675,196,50.9],[1,1,4450,201,50.8],[1,0,3400,190,50.1],[1,1,4300,212,49.0],[1,1,3250,187,51.5],[1,0,3675,198,49.8],[1,0,3325,199,48.1],[1,1,3950,201,51.4],[1,0,3600,193,45.7],[1,1,4050,203,50.7],[1,0,3350,187,42.5],[1,1,3450,197,52.2],[1,0,3250,191,45.2],[1,1,4050,203,49.3],[1,1,3800,202,50.2],[1,0,3525,194,45.6],[1,1,3950,206,51.9],[1,0,3650,189,46.8],[1,0,3650,195,45.7],[1,1,4000,207,55.8],[1,0,3400,202,43.5],[1,1,3775,193,49.6],[1,1,4100,210,50.8],[1,0,3775,198,50.2],[2,0,4500,211,46.1],[2,1,5700,230,50.0],[2,0,4450,210,48.7],[2,1,5700,218,50.0],[2,1,5400,215,47.6],[2,0,4550,210,46.5],[2,0,4800,211,45.4],[2,1,5200,219,46.7],[2,0,4400,209,43.3],[2,1,5150,215,46.8],[2,0,4650,214,40.9],[2,1,5550,216,49.0],[2,0,4650,214,45.5],[2,1,5850,213,48.4],[2,0,4200,210,45.8],[2,1,5850,217,49.3],[2,0,4150,210,42.0],[2,1,6300,221,49.2],[2,0,4800,209,46.2],[2,1,5350,222,48.7],[2,1,5700,218,50.2],[2,0,5000,215,45.1],[2,0,4400,213,46.5],[2,1,5050,215,46.3],[2,0,5000,215,42.9],[2,1,5100,215,46.1],[2,1,5650,215,47.8],[2,0,4600,210,48.2],[2,1,5550,220,50.0],[2,1,5250,222,47.3],[2,0,4700,209,42.8],[2,0,5050,207,45.1],[2,1,6050,230,59.6],[2,0,5150,220,49.1],[2,1,5400,220,48.4],[2,0,4950,213,42.6],[2,1,5250,219,44.4],[2,0,4350,208,44.0],[2,1,5350,208,48.7],[2,0,3950,208,42.7],[2,1,5700,225,49.6],[2,0,4300,210,45.3],[2,1,4750,216,49.6],[2,1,5550,222,50.5],[2,0,4900,217,43.6],[2,0,4200,210,45.5],[2,1,5400,225,50.5],[2,0,5100,213,44.9],[2,1,5300,215,45.2],[2,0,4850,210,46.6],[2,1,5300,220,48.5],[2,0,4400,210,45.1],[2,1,5000,225,50.1],[2,0,4900,217,46.5],[2,1,5050,220,45.0],[2,0,4300,208,43.8],[2,1,5000,220,45.5],[2,0,4450,208,43.2],[2,1,5550,224,50.4],[2,0,4200,208,45.3],[2,1,5300,221,46.2],[2,0,4400,214,45.7],[2,1,5650,231,54.3],[2,0,4700,219,45.8],[2,1,5700,230,49.8],[2,1,5800,229,49.5],[2,0,4700,220,43.5],[2,1,5550,223,50.7],[2,0,4750,216,47.7],[2,1,5000,221,46.4],[2,1,5100,221,48.2],[2,0,5200,217,46.5],[2,0,4700,216,46.4],[2,1,5800,230,48.6],[2,0,4600,209,47.5],[2,1,6000,220,51.1],[2,0,4750,215,45.2],[2,1,5950,223,45.2],[2,0,4625,212,49.1],[2,1,5450,221,52.5],[2,0,4725,212,47.4],[2,1,5350,224,50.0],[2,0,4750,212,44.9],[2,1,5600,228,50.8],[2,0,4600,218,43.4],[2,1,5300,218,51.3],[2,0,4875,212,47.5],[2,1,5550,230,52.1],[2,0,4950,218,47.5],[2,1,5400,228,52.2],[2,0,4750,212,45.5],[2,1,5650,224,49.5],[2,0,4850,214,44.5],[2,1,5200,226,50.8],[2,1,4925,216,49.4],[2,0,4875,222,46.9],[2,0,4625,203,48.4],[2,1,5250,225,51.1],[2,0,4850,219,48.5],[2,1,5600,228,55.9],[2,0,4975,215,47.2],[2,1,5500,228,49.1],[2,1,5500,215,46.8],[2,0,4700,210,41.7],[2,1,5500,219,53.4],[2,0,4575,208,43.3],[2,1,5500,209,48.1],[2,0,5000,216,50.5],[2,1,5950,229,49.8],[2,0,4650,213,43.5],[2,1,5500,230,51.5],[2,0,4375,217,46.2],[2,1,5850,230,55.1],[2,1,6000,222,48.8],[2,0,4925,214,47.2],[2,0,4850,215,46.8],[2,1,5750,222,50.4],[2,0,5200,212,45.2],[2,1,5400,213,49.9]];
+const SPN=['아델리펭귄','턱끈펭귄','젠투펭귄'];
+const V={mass:{n:'몸무게',u:'g',i:2,d:0},flip:{n:'날개 길이',u:'mm',i:3,d:0},culm:{n:'부리 길이',u:'mm',i:4,d:1}};
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sig=z=>1/(1+Math.exp(-z));
+const fx=(x,d)=>x.toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S={sp:0,v:'mass',w:0,b:0,q:0,ep:0,run:false};
+let X=[],Y=[],mu=0,sd=1,lo=0,hi=1,G={a:0,z:1,l:46,r:14},raf=0;
+function mk(sel,items,key){const el=$(sel);el.innerHTML='';items.forEach(([k,t])=>{const b=document.createElement('button');b.textContent=t;b.dataset.k=k;b.onclick=()=>{S[key]=key==='sp'?+k:k;load();};el.appendChild(b);});}
+mk('#sp',SPN.map((n,i)=>[i,n]),'sp');mk('#vr',Object.entries(V).map(([k,v])=>[k,v.n]),'v');
+function stop(){S.run=false;cancelAnimationFrame(raf);$('#tr').textContent='자동으로 학습하기';}
+function setWX(w,x0){S.w=w;S.b=-w*x0;}
+function load(){
+ const rows=D.filter(r=>r[0]===S.sp),i=V[S.v].i;
+ X=rows.map(r=>r[i]);Y=rows.map(r=>r[1]);
+ lo=Math.min(...X);hi=Math.max(...X);mu=X.reduce((a,b)=>a+b,0)/X.length;
+ sd=Math.sqrt(X.reduce((a,x)=>a+(x-mu)**2,0)/X.length);
+ const sx=$('#sx-i');sx.min=lo;sx.max=hi;sx.step=(hi-lo)/400;
+ const f=Y.filter(y=>!y).length;
+ $('#cnt').textContent=SPN[S.sp]+' '+X.length+'마리 (암컷 '+f+', 수컷 '+(X.length-f)+')';
+ $('#qu').textContent=V[S.v].u;
+ $$('#sp').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.k===S.sp)));
+ $$('#vr').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===S.v)));
+ reset();
+}
+function $$(s){return [...document.querySelectorAll(s+' button')];}
+function reset(){stop();S.ep=0;setWX(0.3/sd,mu);S.q=Math.round(mu);ui();}
+function pr(x){return sig(S.w*x+S.b);}
+function ui(){
+ const v=V[S.v],d=v.d,w=S.w,b=S.b,x0=-b/w,bs=b<0?'−':'+';
+ $('#sw-i').value=Math.round(w/(8/sd)*1000);$('#sx-i').value=Math.min(hi,Math.max(lo,x0));
+ $('#sw-o').textContent=w.toPrecision(3);$('#sx-o').textContent=fx(x0,d)+' '+v.u;
+ $('#fm').innerHTML='z = w·x + b = '+w.toPrecision(3)+' × x '+bs+' '+Math.abs(b).toFixed(2)+'<br>p = 1 ÷ (1 + e<sup>−z</sup>)  (수컷일 확률)';
+ $('#bd').innerHTML='p = 0.5가 되는 x = −b ÷ w = <b>'+fx(x0,d)+' '+v.u+'</b><br>'+v.n+'이 이 값보다 크면 수컷, 작으면 암컷으로 예측해요.';
+ let L=0;const M=[[0,0],[0,0]];
+ X.forEach((x,i)=>{const p=Math.min(1-1e-9,Math.max(1e-9,pr(x)));L-=Y[i]?Math.log(p):Math.log(1-p);M[Y[i]][p>=.5?1:0]++;});
+ $('#ls').textContent='학습 횟수 '+S.ep+' · 평균 손실(교차 엔트로피) '+(L/X.length).toFixed(3);
+ $('#cm').innerHTML='<table><tr><th>실제＼예측</th><th>암컷</th><th>수컷</th></tr><tr><th>암컷</th><td class="ok">'+M[0][0]+'</td><td>'+M[0][1]+'</td></tr><tr><th>수컷</th><td>'+M[1][0]+'</td><td class="ok">'+M[1][1]+'</td></tr></table>';
+ $('#acc').textContent='정확도 '+((M[0][0]+M[1][1])/X.length*100).toFixed(1)+'% ('+(M[0][0]+M[1][1])+' / '+X.length+'마리, 전체 데이터로 평가)';
+ const q=S.q,z=w*q+b,p=sig(z);
+ if(document.activeElement!==$('#qx'))$('#qx').value=q;
+ $('#pc').innerHTML='z = '+w.toPrecision(3)+' × '+fx(q,d)+' '+bs+' '+Math.abs(b).toFixed(2)+' = <b>'+z.toFixed(2)+'</b><br>p = 1 ÷ (1 + e<sup>−('+z.toFixed(2)+')</sup>) = <b>'+p.toFixed(3)+'</b>';
+ $('#pv').innerHTML=(p>=.5?'수컷':'암컷')+'으로 예측 <span style="font-size:14px;font-weight:500;color:var(--mu)">(수컷일 확률 '+(p*100).toFixed(1)+'%)</span>';
+ draw();
+}
+function draw(){
+ const cv=$('#cv'),r=cv.getBoundingClientRect(),k=devicePixelRatio||1;
+ cv.width=r.width*k;cv.height=r.height*k;const c=cv.getContext('2d');c.setTransform(k,0,0,k,0,0);
+ const W=r.width,H=r.height,ml=46,mr=14,mt=12,mb=40,pad=(hi-lo)*.06,a=lo-pad,z=hi+pad;G={a,z,l:ml,r:mr};
+ const sx=x=>ml+(x-a)/(z-a)*(W-ml-mr),sy=p=>mt+(1-p)*(H-mt-mb);
+ const ink=css('--ink'),mu_=css('--mu'),ln=css('--ln'),fe=css('--fe'),ma=css('--ma'),ac=css('--ac'),bad=css('--bad');
+ const v=V[S.v];c.font='12px system-ui,sans-serif';c.fillStyle=mu_;c.strokeStyle=ln;c.lineWidth=1;
+ [0,.5,1].forEach(p=>{c.beginPath();c.moveTo(ml,sy(p));c.lineTo(W-mr,sy(p));c.stroke();c.textAlign='right';c.fillText(p,ml-6,sy(p)+4);});
+ c.textAlign='center';for(let t=0;t<=5;t++){const x=a+(z-a)*t/5;c.fillText(fx(x,0),sx(x),H-mb+16);}
+ c.fillText(v.n+' x ('+v.u+')',(ml+W-mr)/2,H-6);
+ c.save();c.translate(12,(mt+H-mb)/2);c.rotate(-Math.PI/2);c.fillText('수컷일 확률 p',0,0);c.restore();
+ X.forEach((x,i)=>{const f=(i*37%11)/11*.1,y=Y[i]?1-f:f,wrong=(pr(x)>=.5?1:0)!==Y[i];
+  c.beginPath();c.arc(sx(x),sy(y),4.2,0,7);c.globalAlpha=.7;c.fillStyle=Y[i]?ma:fe;c.fill();c.globalAlpha=1;
+  if(wrong){c.strokeStyle=bad;c.lineWidth=1.6;c.stroke();}});
+ const x0=-S.b/S.w;
+ if(x0>a&&x0<z){c.setLineDash([5,4]);c.strokeStyle=mu_;c.lineWidth=1.2;c.beginPath();c.moveTo(sx(x0),mt);c.lineTo(sx(x0),H-mb);c.stroke();c.setLineDash([]);}
+ c.strokeStyle=ink;c.lineWidth=2.4;c.beginPath();
+ for(let t=0;t<=200;t++){const x=a+(z-a)*t/200;t?c.lineTo(sx(x),sy(pr(x))):c.moveTo(sx(x),sy(pr(x)));}c.stroke();
+ const q=S.q;c.strokeStyle=ac;c.lineWidth=1.6;c.beginPath();c.moveTo(sx(q),mt);c.lineTo(sx(q),H-mb);c.stroke();
+ c.beginPath();c.arc(sx(q),sy(pr(q)),6,0,7);c.fillStyle=ac;c.fill();c.strokeStyle=css('--sf');c.lineWidth=2;c.stroke();
+}
+function train(){
+ if(S.run){stop();return;}
+ S.run=true;$('#tr').textContent='멈추기';
+ let a=S.w*sd,c=S.b+S.w*mu;const Z=X.map(x=>(x-mu)/sd);let n=0;
+ const step=()=>{
+  for(let k=0;k<(reduce?600:8)&&n<600;k++,n++){let ga=0,gc=0;
+   for(let i=0;i<Z.length;i++){const e=sig(a*Z[i]+c)-Y[i];ga+=e*Z[i];gc+=e;}
+   a=Math.max(0.01,a-ga/Z.length);c-=gc/Z.length;S.ep++;}
+  S.w=a/sd;S.b=c-a*mu/sd;ui();
+  if(n<600&&S.run)raf=requestAnimationFrame(step);else stop();};
+ step();
+}
+$('#tr').onclick=train;$('#rs').onclick=reset;
+$('#sw-i').oninput=e=>{stop();const x0=-S.b/S.w;S.w=Math.max(.01/sd,e.target.value/1000*(8/sd));S.b=-S.w*x0;ui();};
+$('#sx-i').oninput=e=>{stop();S.b=-S.w*(+e.target.value);ui();};
+$('#qx').oninput=e=>{const x=parseFloat(e.target.value);if(isFinite(x)){S.q=x;ui();}};
+const cv=$('#cv');let drag=false;
+const setQ=e=>{const r=cv.getBoundingClientRect(),t=(e.clientX-r.left-G.l)/(r.width-G.l-G.r),x=G.a+t*(G.z-G.a);S.q=+Math.min(hi,Math.max(lo,x)).toFixed(V[S.v].d);ui();};
+cv.addEventListener('pointerdown',e=>{drag=true;cv.setPointerCapture(e.pointerId);setQ(e);});
+cv.addEventListener('pointermove',e=>{if(drag)setQ(e);});
+cv.addEventListener('pointerup',()=>{drag=false;});
+new ResizeObserver(()=>draw()).observe(cv);
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(draw,30));}catch(_){}
+load();
+})();
+</script></body></html>
