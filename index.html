@@ -60,7 +60,8 @@ td.ok{background:color-mix(in srgb,var(--fe) 18%,transparent);font-weight:700}
   <label for="sx-i">경계값 x₀ (확률 0.5인 지점) <output id="sx-o"></output></label><input type="range" id="sx-i">
   <div class="calc" id="fm"></div><div class="calc" id="bd"></div>
   <div class="row" style="margin:12px 0 0"><button class="btn" id="tr">자동으로 학습하기</button><button class="btn o" id="rs">처음으로</button></div>
-  <p class="hint" id="ls"></p>
+  <p class="hint" id="ls">
+  <p class="hint" id="ls2"></p>
  </div>
  <div class="card"><h2>새 펭귄 예측</h2>
   <div class="row"><label for="qx" style="display:block">x 값</label><input type="number" id="qx"><span id="qu" class="hint" style="margin:0"></span></div>
@@ -111,7 +112,8 @@ function ui(){
  X.forEach((x,i)=>{const p=Math.min(1-1e-9,Math.max(1e-9,pr(x)));L-=Y[i]?Math.log(p):Math.log(1-p);M[Y[i]][p>=.5?1:0]++;});
  // $('#ls').textContent='학습 횟수 '+S.ep+' · 평균 손실(교차 엔트로피) '+(L/X.length).toFixed(3);
  // 기존 코드 대신 아래 코드로 변경합니다.
- $('#ls').innerHTML = '<span style="font-size: 100px; font-weight: bold;">학습 횟수 \n ' + S.ep + ' 평균 손실(교차 엔트로피) ' + (L / X.length).toFixed(3) + '</span>';
+ $('#ls').innerHTML = '<span style="font-size: 100px; font-weight: bold;">학습 횟수' + S.ep +'</span>';
+ $('#ls2').innerHTML = '<span style="font-size: 100px; font-weight: bold;">평균 손실(교차 엔트로피) ' + (L / X.length).toFixed(3) + '</span>';
 
  $('#cm').innerHTML='<table><tr><th>실제＼예측</th><th>암컷</th><th>수컷</th></tr><tr><th>암컷</th><td class="ok">'+M[0][0]+'</td><td>'+M[0][1]+'</td></tr><tr><th>수컷</th><td>'+M[1][0]+'</td><td class="ok">'+M[1][1]+'</td></tr></table>';
  $('#acc').textContent='정확도 '+((M[0][0]+M[1][1])/X.length*100).toFixed(1)+'% ('+(M[0][0]+M[1][1])+' / '+X.length+'마리, 전체 데이터로 평가)';
