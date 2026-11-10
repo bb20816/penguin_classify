@@ -109,7 +109,10 @@ function ui(){
  $('#bd').innerHTML='p = 0.5가 되는 x = −b ÷ w = <b>'+fx(x0,d)+' '+v.u+'</b><br>'+v.n+'이 이 값보다 크면 수컷, 작으면 암컷으로 예측해요.';
  let L=0;const M=[[0,0],[0,0]];
  X.forEach((x,i)=>{const p=Math.min(1-1e-9,Math.max(1e-9,pr(x)));L-=Y[i]?Math.log(p):Math.log(1-p);M[Y[i]][p>=.5?1:0]++;});
- $('#ls').textContent='학습 횟수 '+S.ep+' · 평균 손실(교차 엔트로피) '+(L/X.length).toFixed(3);
+ // $('#ls').textContent='학습 횟수 '+S.ep+' · 평균 손실(교차 엔트로피) '+(L/X.length).toFixed(3);
+ // 기존 코드 대신 아래 코드로 변경합니다.
+ $('#ls').innerHTML = '<span style="font-size: 20px; font-weight: bold;">학습 횟수 ' + S.ep + ' · 평균 손실(교차 엔트로피) ' + (L / X.length).toFixed(3) + '</span>';
+
  $('#cm').innerHTML='<table><tr><th>실제＼예측</th><th>암컷</th><th>수컷</th></tr><tr><th>암컷</th><td class="ok">'+M[0][0]+'</td><td>'+M[0][1]+'</td></tr><tr><th>수컷</th><td>'+M[1][0]+'</td><td class="ok">'+M[1][1]+'</td></tr></table>';
  $('#acc').textContent='정확도 '+((M[0][0]+M[1][1])/X.length*100).toFixed(1)+'% ('+(M[0][0]+M[1][1])+' / '+X.length+'마리, 전체 데이터로 평가)';
  const q=S.q,z=w*q+b,p=sig(z);
